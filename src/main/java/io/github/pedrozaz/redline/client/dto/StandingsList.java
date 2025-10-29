@@ -1,4 +1,12 @@
 package io.github.pedrozaz.redline.client.dto;
 
-public record StandingsList() {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record StandingsList(
+        @JsonProperty("DriverStandings")List<DriverStanding> driverStandings
+        ) {
 }
