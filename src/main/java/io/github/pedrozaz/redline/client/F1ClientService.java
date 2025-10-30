@@ -25,7 +25,7 @@ public class F1ClientService {
     }
 
     public List<DriverStanding> getCurrentStandings() {
-        String url = API_BASE_URL + "current/currentStandings.json";
+        String url = API_BASE_URL + "current/driverStandings.json";
 
         try {
             ErgastResponse response = restTemplate.getForObject(url, ErgastResponse.class);
