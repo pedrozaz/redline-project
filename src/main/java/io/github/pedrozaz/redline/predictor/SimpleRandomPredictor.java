@@ -1,8 +1,6 @@
 package io.github.pedrozaz.redline.predictor;
 
-import io.github.pedrozaz.redline.client.dto.Driver;
 import io.github.pedrozaz.redline.client.dto.DriverStanding;
-import io.github.pedrozaz.redline.client.dto.Race;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
