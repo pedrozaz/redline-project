@@ -21,7 +21,7 @@ public class ChampionshipController {
         this.simulatorService = simulatorService;
     }
 
-    @GetMapping
+    @GetMapping("/simulate")
     public ResponseEntity<Map<String, Object>> getSimulationResults() {
         Map<String, Object> simulationResults = simulatorService.runChampionshipSim();
         return ResponseEntity.ok(simulationResults);
