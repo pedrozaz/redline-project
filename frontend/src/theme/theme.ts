@@ -1,35 +1,30 @@
-import { extendTheme, theme as baseTheme } from '@chakra-ui/react'
+import { extendTheme } from '@chakra-ui/react';
 
 const colors = {
     brand: {
         red: '#E80020',
-        white: '#FFFFFF',
-        black: '#1A1A1A',
+        white: '#FAFAFA', // Branco Gelo
+        black: '#1A1A1A', // Preto
     },
     gray: {
-        800: '#1A1A1A',
-        700: '#2D2D2D',
+        200: '#E2E2E2', // Para o nome fade (claro)
+        300: '#C9C9C9',
     },
     red: {
         500: '#E80020',
     },
 };
 
-const fonts = {
-    body: `'Roboto', ${baseTheme.fonts?.body}`,
-    heading: `'Roboto', ${baseTheme.fonts?.heading}`,
+const styles = {
+    global: {
+        body: {
+            bg: 'brand.white',
+            color: 'brand.black',
+        },
+    },
 };
 
 export const redlineTheme = extendTheme({
     colors,
-    fonts,
-    styles:
-        {
-            global: {
-                body: {
-                    bg: 'brand.black',
-                    color: 'brand.white',
-                },
-            },
-        },
+    styles,
 });
