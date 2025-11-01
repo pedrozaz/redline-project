@@ -30,7 +30,6 @@ def create_database():
     cursor.execute("DROP TABLE IF EXISTS stints CASCADE;")
     cursor.execute("DROP TABLE IF EXISTS pit_stops CASCADE;")
     cursor.execute("DROP TABLE IF EXISTS lap_data CASCADE;")
-    cursor.execute("DROP TABLE IF EXISTS starting_grid CASCADE;")
     cursor.execute("DROP TABLE IF EXISTS weather CASCADE;")
     cursor.execute("DROP TABLE IF EXISTS session_results CASCADE;")
     cursor.execute("DROP TABLE IF EXISTS sessions CASCADE;")
@@ -40,6 +39,7 @@ def create_database():
                    CREATE TABLE sessions (
                      session_key INTEGER PRIMARY KEY,
                      session_name TEXT,
+                     session_type TEXT,
                      country_name TEXT,
                      circuit_key INTEGER,
                      circuit_short_name TEXT,
@@ -86,16 +86,6 @@ def create_database():
                    ''')
 
     cursor.execute('''
-                   CREATE TABLE starting_grid (
-                      id SERIAL PRIMARY KEY,
-                      session_key INTEGER REFERENCES sessions(session_key),
-                      driver_number INTEGER,
-                      position INTEGER,
-                      lap_duration REAL
-                   )
-                   ''')
-
-    cursor.execute('''
                    CREATE TABLE weather (
                         id SERIAL PRIMARY KEY,
                         session_key INTEGER REFERENCES sessions(session_key),
@@ -116,6 +106,7 @@ def create_database():
                         session_key INTEGER REFERENCES sessions(session_key),
                         driver_number INTEGER,
                         position INTEGER,
+                        session_type TEXT,
                         dnf BOOLEAN,
                         dns BOOLEAN,
                         dsq BOOLEAN
