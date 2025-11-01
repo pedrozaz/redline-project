@@ -33,7 +33,6 @@ const findWinner = (probabilities: DriverProbability): string => {
     return winnerEntry[0];
 };
 
-// Partículas sutis
 const SubtleParticles = () => {
     const particles = Array.from({ length: 20 }, (_, i) => i);
 
@@ -118,7 +117,6 @@ function LandingPage() {
         hasScrolled ? [0, 250] : [0, 0]
     );
 
-    // Piloto e frame diminuem e sobem juntos para encaixar na tela
     const imageY = useTransform(
         scrollYProgress,
         [0, 0.5],
@@ -150,18 +148,12 @@ function LandingPage() {
     };
 
     const handleLogoClick = () => {
-        // Limpa os dados da simulação anterior
         queryClient.resetQueries({ queryKey: ['simulation'] });
-        // Reseta o estado do scroll
         setHasScrolled(false);
-        // Rola para o topo
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const renderContent = () => {
-        // --- MUDANÇA PRINCIPAL AQUI ---
-        // Agora a tela de "SIMULATING" aparece no load inicial (isLoading)
-        // E também em todas as simulações seguintes (isRefetching)
         if (isLoading || isRefetching) { //
             return (
                 <MotionBox
@@ -266,7 +258,6 @@ function LandingPage() {
                             backgroundSize="50px 50px"
                         />
 
-                        {/* --- NOVA VINHETA --- */}
                         <Box
                             position="absolute"
                             top="0"
@@ -276,7 +267,6 @@ function LandingPage() {
                             bg="radial-gradient(ellipse at center, transparent 70%, rgba(25, 25, 25, 0.1) 100%)"
                             pointerEvents="none"
                         />
-                        {/* --- FIM DA VINHETA --- */}
 
 
                         {/* Subtle Particles */}
@@ -346,9 +336,25 @@ function LandingPage() {
                                 opacity: textOpacity,
                                 scale: textSize,
                             }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.12 }}
-                            transition={{ duration: 0.6 }}
+                            initial={{
+                                opacity: 0,
+                                scale: 1.2,
+                                filter: "blur(10px)",
+                            }}
+                            animate={{
+                                opacity: 0.12,
+                                scale: 1,
+                                filter: "blur(0px)",
+                            }}
+                            transition={{
+                                type: "spring",
+                                bounce: 0.40,
+                                damping: 80,
+                                stiffness: 80,
+                                mass: 1,
+                                visualDuration: 0.1,
+                                delay: 0.4,
+                            }}
                         >
                             {winnerName}
                         </MotionHeading>
@@ -375,7 +381,7 @@ function LandingPage() {
                             SEASON WINNER
                         </MotionText>
 
-                        {/* Elegant Frame - mais elaborado */}
+                        {/* Elegant Frame*/}
                         <MotionBox
                             position="absolute"
                             bottom="8%"
@@ -417,7 +423,7 @@ function LandingPage() {
                                 borderRadius="md"
                             />
 
-                            {/* Corner accents - larger and more prominent */}
+                            {/* Corner accents */}
                             <Box position="absolute" top="-2px" left="-2px" width="50px" height="50px" borderTop="4px solid" borderLeft="4px solid" borderColor="gray.800" />
                             <Box position="absolute" top="-2px" right="-2px" width="50px" height="50px" borderTop="4px solid" borderRight="4px solid" borderColor="gray.800" />
                             <Box position="absolute" bottom="-2px" left="-2px" width="50px" height="50px" borderBottom="4px solid" borderLeft="4px solid" borderColor="gray.800" />
@@ -430,7 +436,7 @@ function LandingPage() {
                             <Box position="absolute" bottom="15px" right="15px" width="4px" height="4px" bg="gray.800" borderRadius="50%" />
                         </MotionBox>
 
-                        {/* Driver Image - sobe e diminui junto com o frame */}
+                        {/* Driver Image*/}
                         <MotionImage
                             src={mainImageUrl}
                             alt={winnerName}
@@ -510,15 +516,13 @@ function LandingPage() {
             );
         }
 
-        // --- NOVA TELA INICIAL (ANTES DE SIMULAR) ---
-        // Isso substitui o 'return null;' anterior
         return (
             <MotionBox
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
-                {/* Reutiliza o Hero Section styling */}
+                {/* Hero Section styling */}
                 <Box
                     position="relative"
                     width="100%"
@@ -529,7 +533,6 @@ function LandingPage() {
                     alignItems="center"
                     justifyContent="center"
                 >
-                    {/* Background elements copiados do Hero */}
                     <Box
                         position="absolute"
                         top="0"
@@ -541,7 +544,6 @@ function LandingPage() {
                         backgroundSize="50px 50px"
                     />
 
-                    {/* VINHETA (adicionada aqui também) */}
                     <Box
                         position="absolute"
                         top="0"
@@ -594,10 +596,9 @@ function LandingPage() {
                         height="80px"
                         borderBottom="2px solid"
                         borderRight="2px solid"
-                        borderColor="gray.300"
+                        borderColor="gray.30Services"
                     />
 
-                    {/* Conteúdo da Tela Inicial */}
                     <MotionBox
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -629,12 +630,12 @@ function LandingPage() {
                 </Box>
             </MotionBox>
         );
-        // --- FIM DA TELA INICIAL ---
+
     };
 
     return (
         <Box textAlign="center" minHeight="100vh" position="relative" bg="white">
-            {/* Clean minimal header */}
+
             <MotionBox
                 position="sticky"
                 top={0}

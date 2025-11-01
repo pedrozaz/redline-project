@@ -3,11 +3,11 @@ import { extendTheme } from '@chakra-ui/react';
 const colors = {
     brand: {
         red: '#E80020',
-        white: '#FAFAFA', // Branco Gelo
-        black: '#1A1A1A', // Preto
+        white: '#FAFAFA',
+        black: '#1A1A1A',
     },
     gray: {
-        200: '#E2E2E2', // Para o nome fade (claro)
+        200: '#E2E2E2',
         300: '#C9C9C9',
     },
     red: {
@@ -24,7 +24,13 @@ const styles = {
     },
 };
 
+const fonts = {
+    heading: "'Aldrich', sans-serif",
+    body: "'Aldrich', sans-serif",
+}
+
 export const redlineTheme = extendTheme({
     colors,
     styles,
+    fonts
 });
