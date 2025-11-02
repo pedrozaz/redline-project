@@ -38,7 +38,7 @@ def fetch_api_data(endpoint: str, params: Dict[str, Any]) -> List[Dict[str, Any]
     try:
         with httpx.Client() as client:
             response = client.get(f"{BASE_API_URL}/{endpoint}", params=params, timeout=30.0)
-            response.raise_for_status() 
+            response.raise_for_status()
             data = response.json()
             if not isinstance(data, list):
                 print(f"WARNING: API did not return a list for endpoint '{endpoint}'.")
@@ -72,11 +72,14 @@ def ingest_sessions(conn, year: int):
     sessions_data = fetch_api_data("sessions", {"year": year})
     if not sessions_data:
         print(f"No session data found for {year}.")
-        return []
+        return {}, []
 
-    inserted_sessions = []
+    session_key_to_type_map = {}
+    inserted_session_keys = []
+
     for s in sessions_data:
-        if s.get('session_type') in ('Race', 'Qualifying', 'Sprint'):
+        session_type = s.get('session_type')
+        if session_type in ('Race', 'Qualifying', 'Sprint'):
             try:
                 cursor.execute(
                     """
@@ -85,21 +88,23 @@ def ingest_sessions(conn, year: int):
                     ON CONFLICT (session_key) DO NOTHING;
                     """,
                     (
-                        s['session_key'], s.get('session_name'), s.get('session_type'),
+                        s['session_key'], s.get('session_name'), session_type,
                         s.get('country_name'), s.get('circuit_key'), s.get('circuit_short_name'),
                         s.get('date_start'), s.get('year')
                     )
                 )
-                inserted_sessions.append(s['session_key'])
+
+                session_key_to_type_map[s['session_key']] = session_type
+                inserted_session_keys.append(s['session_key'])
+
             except Exception as e:
                 print(f"Error inserting session {s.get('session_key')}: {e}")
 
-    print(f"Ingested {len(inserted_sessions)} sessions (Race/Qualy/Sprint).")
+    print(f"Ingested {len(inserted_session_keys)} sessions (Race/Qualy/Sprint).")
     cursor.close()
-    return inserted_sessions
+    return session_key_to_type_map, inserted_session_keys
 
-def ingest_related_data(conn, session_keys: List[int]):
-
+def ingest_related_data(conn, session_keys: List[int], sessions_map: Dict[int, str]):
     if not session_keys:
         print("No session keys provided. Skipping related data ingestion.")
         return
@@ -111,22 +116,26 @@ def ingest_related_data(conn, session_keys: List[int]):
 
     print("Fetching SESSION_RESULTS...")
     results_data = fetch_api_data("session_result", api_params)
-    print(f"  > Received {len(results_data)} session_result records.") # DEBUG
+    print(f"  > Received {len(results_data)} session_result records.")
 
     for r in results_data:
         try:
-            points = get_points(r.get('session_type'), r.get('position'))
+
+            session_key = r['session_key']
+            session_type = sessions_map.get(session_key, 'Unknown')
+
+            points = get_points(session_type, r.get('position'))
 
             cursor.execute(
                 """
-                INSERT INTO session_results (session_key, driver_number, position, points, session_type, dnf, dns, dsq)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO session_results (session_key, driver_number, position, points, dnf, dns, dsq)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (id) DO NOTHING;
                 """,
                 (
                     r['session_key'], r.get('driver_number'), r.get('position'),
                     points,
-                    r.get('session_type'), r.get('dnf'), r.get('dns'), r.get('dsq')
+                    r.get('dnf'), r.get('dns'), r.get('dsq')
                 )
             )
         except Exception as e:
@@ -134,7 +143,7 @@ def ingest_related_data(conn, session_keys: List[int]):
 
     print("Fetching DRIVERS...")
     drivers_data = fetch_api_data("drivers", api_params)
-    print(f"  > Received {len(drivers_data)} driver records.") # DEBUG
+    print(f"  > Received {len(drivers_data)} driver records.")
 
     for d in drivers_data:
         try:
@@ -155,7 +164,7 @@ def ingest_related_data(conn, session_keys: List[int]):
 
     print("Fetching WEATHER...")
     weather_data = fetch_api_data("weather", api_params)
-    print(f"  > Received {len(weather_data)} weather records.") # DEBUG
+    print(f"  > Received {len(weather_data)} weather records.")
 
     for w in weather_data:
         try:
@@ -191,10 +200,10 @@ def main():
     for year in YEARS_TO_FETCH:
         print(f"\n--- Processing Year: {year} ---")
 
-        session_keys = ingest_sessions(connection, year)
+        sessions_map, session_keys = ingest_sessions(connection, year)
 
         if session_keys:
-            ingest_related_data(connection, session_keys)
+            ingest_related_data(connection, session_keys, sessions_map)
         else:
             print(f"No sessions found to process for {year}.")
 

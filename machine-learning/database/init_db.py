@@ -59,7 +59,6 @@ def create_tables(conn):
                        driver_number INTEGER,
                        position INTEGER,
                        points INTEGER,
-                       session_type TEXT,
                        dnf BOOLEAN,
                        dns BOOLEAN,
                        dsq BOOLEAN
@@ -75,7 +74,6 @@ def create_tables(conn):
                     full_name TEXT,
                     team_name TEXT,
                     team_colour TEXT,
-                    country_name TEXT,
                     country_code TEXT,
                     PRIMARY KEY (driver_number, session_key)
                    )
