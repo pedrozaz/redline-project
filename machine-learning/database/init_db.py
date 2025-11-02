@@ -57,7 +57,7 @@ def create_tables(conn):
                        id SERIAL PRIMARY KEY,
                        session_key INTEGER REFERENCES sessions(session_key) ON DELETE CASCADE,
                        driver_number INTEGER,
-                       positon INTEGER,
+                       position INTEGER,
                        points INTEGER,
                        session_type TEXT,
                        dnf BOOLEAN,
@@ -76,6 +76,7 @@ def create_tables(conn):
                     team_name TEXT,
                     team_colour TEXT,
                     country_name TEXT,
+                    country_code TEXT,
                     PRIMARY KEY (driver_number, session_key)
                    )
                    """)
@@ -101,9 +102,9 @@ def create_tables(conn):
     logging.info(f"Created tables in {DB_NAME} database.")
 
 if __name__ == "__main__":
-    conn = get_connection()
-    if conn:
-        create_tables(conn)
-        conn.close()
+    db_conn = get_connection()
+    if db_conn:
+        create_tables(db_conn)
+        db_conn.close()
         logging.info(f"Connected to {DB_NAME} database on host {DB_HOST}.")
 
