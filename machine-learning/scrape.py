@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 import time
 
 # --- CONFIGURAÇÃO ---
-YEAR_TO_SCRAPE = 2024
+YEAR_TO_SCRAPE = 2025
 BASE_API_URL = "https://api.openf1.org/v1"
 
 DB_NAME = "redline_db"
