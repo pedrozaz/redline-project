@@ -3,7 +3,6 @@ package io.github.pedrozaz.redline.service;
 import io.github.pedrozaz.redline.client.F1ClientService;
 import io.github.pedrozaz.redline.client.dto.DriverStanding;
 import io.github.pedrozaz.redline.client.dto.Race;
-import io.github.pedrozaz.redline.predictor.EventType;
 import io.github.pedrozaz.redline.predictor.RacePredictor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +13,7 @@ import java.util.stream.Collectors;
 @Service
 public class ChampionshipSimulatorService {
 
-    private static final int SIMULATION_COUNT = 10_000;
+    private static final int SIMULATION_COUNT = 10;
 
     private final F1ClientService f1ClientService;
     private final RacePredictor racePredictor;
@@ -54,17 +53,10 @@ public class ChampionshipSimulatorService {
         Map<String, Double> simulatedStandings = initSimulatedStandings(initialStandings);
 
         for (Race race : remainingRaces) {
-            Map<String, Double> raceResults = racePredictor.predictRaceResults(initialStandings, EventType.RACE);
+            Map<String, Double> raceResults = racePredictor.predictRaceResults(initialStandings, race);
 
             raceResults.forEach((driverId, points) ->
                     simulatedStandings.merge(driverId, points, Double::sum));
-
-            if (race.sprint() != null) {
-                Map<String, Double> sprintResults = racePredictor.predictRaceResults(initialStandings, EventType.SPRINT);
-
-                sprintResults.forEach((driverId, points) ->
-                        simulatedStandings.merge(driverId, points, Double::sum));
-            }
         }
         return findSeasonWinner(simulatedStandings);
     }

@@ -1,4 +1,4 @@
-package io.github.pedrozaz.redline;
+package io.github.pedrozaz.redline.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

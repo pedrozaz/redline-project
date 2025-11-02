@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.Map;
 
 public interface RacePredictor {
-    Map<String, Double> predictRaceResults(List<DriverStanding> currentStandings, EventType eventType);
+    Map<String, Double> predictRaceResults(List<DriverStanding> currentStandings, Race race);
 }
