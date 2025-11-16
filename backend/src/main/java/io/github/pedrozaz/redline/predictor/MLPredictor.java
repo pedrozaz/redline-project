@@ -1,92 +1,84 @@
 package io.github.pedrozaz.redline.predictor;
 
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.pedrozaz.redline.client.DriverIdMapper;
 import io.github.pedrozaz.redline.client.dto.DriverStanding;
 import io.github.pedrozaz.redline.client.dto.Race;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-record MLRaceRequest(String circuit_name, int year) {}
+@Service
+public class MLPredictor {
 
-@Service @Primary
-public class MLPredictor implements RacePredictor {
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final DriverIdMapper driverIdMapper;
 
-    private static final Logger logger = LoggerFactory.getLogger(MLPredictor.class);
+    private static final String PYTHON_API_URL = "http://localhost:5000/simulate";
 
-    private final WebClient mlApiWebClient;
-
-    private static final Map<String, String> CIRCUIT_ID_TO_NAME_MAP = new HashMap<>();
-    static {
-        CIRCUIT_ID_TO_NAME_MAP.put("bahrain", "Sakhir");
-        CIRCUIT_ID_TO_NAME_MAP.put("jeddah", "Jeddah");
-        CIRCUIT_ID_TO_NAME_MAP.put("albert_park", "Melbourne");
-        CIRCUIT_ID_TO_NAME_MAP.put("suzuka", "Suzuka");
-        CIRCUIT_ID_TO_NAME_MAP.put("shanghai", "Shanghai");
-        CIRCUIT_ID_TO_NAME_MAP.put("miami", "Miami");
-        CIRCUIT_ID_TO_NAME_MAP.put("imola", "Imola");
-        CIRCUIT_ID_TO_NAME_MAP.put("monaco", "Monte Carlo");
-        CIRCUIT_ID_TO_NAME_MAP.put("villeneuve", "Montreal");
-        CIRCUIT_ID_TO_NAME_MAP.put("catalunya", "Catalunya");
-        CIRCUIT_ID_TO_NAME_MAP.put("red_bull_ring", "Spielberg");
-        CIRCUIT_ID_TO_NAME_MAP.put("silverstone", "Silverstone");
-        CIRCUIT_ID_TO_NAME_MAP.put("hungaroring", "Hungaroring");
-        CIRCUIT_ID_TO_NAME_MAP.put("spa", "Spa-Francorchamps");
-        CIRCUIT_ID_TO_NAME_MAP.put("zandvoort", "Zandvoort");
-        CIRCUIT_ID_TO_NAME_MAP.put("monza", "Monza");
-        CIRCUIT_ID_TO_NAME_MAP.put("baku", "Baku");
-        CIRCUIT_ID_TO_NAME_MAP.put("marina_bay", "Singapore");
-        CIRCUIT_ID_TO_NAME_MAP.put("americas", "Austin");
-        CIRCUIT_ID_TO_NAME_MAP.put("rodriguez", "Mexico City");
-        CIRCUIT_ID_TO_NAME_MAP.put("interlagos", "Interlagos");
-        CIRCUIT_ID_TO_NAME_MAP.put("vegas", "Las Vegas");
-        CIRCUIT_ID_TO_NAME_MAP.put("losail", "Lusail");
-        CIRCUIT_ID_TO_NAME_MAP.put("yas_marina", "Yas Marina Circuit");
+    public MLPredictor(RestTemplate restTemplate, ObjectMapper objectMapper, DriverIdMapper driverIdMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.driverIdMapper = driverIdMapper;
     }
 
-    public MLPredictor(WebClient mlApiWebClient) {
-        this.mlApiWebClient = mlApiWebClient;
-    }
-
-    @Override
-    public Map<String, Double> predictRaceResults(List<DriverStanding> currentStandings, Race race) {
-        String jolpicaCircuitId = race.circuit().circuitId();
-        String openF1CircuitName = CIRCUIT_ID_TO_NAME_MAP.get(jolpicaCircuitId);
-        int year = race.date().getYear();
-
-        if (openF1CircuitName == null) {
-            logger.error("Invalid circuit ID: {}", jolpicaCircuitId);
-            return new HashMap<>();
-        }
-
-        MLRaceRequest requestBody = new MLRaceRequest(openF1CircuitName, year);
-        logger.info("Calling ML with {}", requestBody);
-
+    public Map<String, Double> runFullSimulation(List<DriverStanding> standings, List<Race> races) {
         try {
-            Map<String, Double> prediction = mlApiWebClient.post()
-                    .uri("simulate_race_results")
-                    .body(Mono.just(requestBody), MLRaceRequest.class)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-            if (prediction == null || prediction.isEmpty()) {
-                logger.warn("Python API returned empty results for {}", requestBody);
-                return new HashMap<>();
-            }
+            List<Map<String, Object>> translatedStandings = standings.stream()
+                    .map(this::translateStanding)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
 
-            logger.info("Success. Returned {} results", prediction.size());
-            return prediction;
+            Map<String, Object> requestBody = Map.of(
+                    "currentStandings", translatedStandings,
+                    "remainingRaces", races
+            );
+
+            String jsonBody = objectMapper.writeValueAsString(requestBody);
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+
+            String jsonResponse = restTemplate.postForObject(PYTHON_API_URL, request, String.class);
+
+            return objectMapper.readValue(jsonResponse, new TypeReference<>() {
+            });
+
         } catch (Exception e) {
-            logger.error("Error while calling ML with {}", requestBody, e);
-            return new HashMap<>();
+            System.err.println("Falha ao chamar a API de simulação Python: " + e.getMessage());
+            return Map.of("error", -1.0);
         }
+    }
+
+    private Map<String, Object> translateStanding(DriverStanding standing) {
+
+        String dbDriverId = driverIdMapper.getDbDriverId(standing.driver().driverId()).orElse(null);
+        String dbConstructorId = null;
+
+        if (standing.constructors() != null && !standing.constructors().isEmpty()) {
+            String jolpicaConstructorId = standing.constructors().get(0).constructorId();
+            dbConstructorId = driverIdMapper.getDbConstructorId(jolpicaConstructorId).orElse(null);
+        }
+
+        if (dbDriverId == null || dbConstructorId == null) {
+            System.err.println("Pulando piloto: " + standing.driver().driverId() + " (ID não encontrado no mapper ou construtor nulo)");
+            return null;
+        }
+
+        return Map.of(
+                "driver", Map.of("driverId", dbDriverId),
+                "constructor", Map.of("constructorId", dbConstructorId),
+                "points", standing.points()
+        );
     }
 }

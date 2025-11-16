@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Race(
+        @JsonProperty("round") String round,
         @JsonProperty("raceName") String raceName,
         @JsonProperty("date") LocalDate date,
         @JsonProperty("Sprint") Sprint sprint,

@@ -5,10 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a78f73a0-3729-4e0b-84bb-ad240f88a17a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/main.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/machine-learning/src/create_dataset.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/machine-learning/src/ingest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/.idea/sqldialects.xml" beforeDir="false" afterPath="$PROJECT_DIR$/machine-learning/.idea/sqldialects.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/database/init_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/machine-learning/database/init_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/.package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/debug/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/debug/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/debug/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/debug/src/browser.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/debug/src/common.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/debug/src/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/debug/src/node.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/httpx/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/httpx/lib/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/httpx/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/ms/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/ms/license.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/ms/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/ms/readme.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/node_modules/sqlalchemy/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/src/.~lock.model_features.csv#" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/src/engineer_features.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/src/model_features.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine-learning/src/scrape.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,7 +82,7 @@
     "Spring Boot.RedlineApplication.executor": "Run",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/pedroza/IdeaProjects/redline/frontend",
+    "last_opened_file_path": "/home/pedroza/IdeaProjects/redline/machine-learning",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -111,6 +132,7 @@
       <workItem from="1761840477157" duration="145000" />
       <workItem from="1761840720195" duration="102000" />
       <workItem from="1761841593817" duration="3162000" />
+      <workItem from="1763232586488" duration="73000" />
     </task>
     <servers />
   </component>

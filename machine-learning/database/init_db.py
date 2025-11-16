@@ -1,108 +1,130 @@
 import psycopg2
-import sys
 import os
-import logging
+import sys
+from psycopg2.extensions import connection
 
-# DATABASE CONFIG
-DB_NAME = os.getenv("DB_NAME", "redline_db")
-DB_USER = os.getenv("DB_USER", "admin")
-DB_PASS = os.getenv("DB_PASS", "admin")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-# ----------------
+DB_NAME = os.environ.get('PG_DB', 'redline_db' )
+DB_USER = os.environ.get('PG_USER', 'admin' )
+DB_PASS = os.environ.get('PG_PASS', 'admin')
+DB_HOST = os.environ.get('PG_HOST', 'localhost')
+DB_PORT = os.environ.get('PG_PORT', '5432')
 
-def get_connection():
+def get_db_connection() -> connection:
     try:
         conn = psycopg2.connect(
             dbname=DB_NAME,
             user=DB_USER,
             password=DB_PASS,
             host=DB_HOST,
-            port=DB_PORT,
+            port=DB_PORT
         )
-        logging.info(f"Connected to {DB_NAME} database on host {DB_HOST}.")
         return conn
     except psycopg2.OperationalError as e:
-        logging.error(f"Failed to connect to {DB_NAME} database on host {DB_HOST}.")
-        logging.error(e)
+        print(f"Error: Could not connect to database '{DB_NAME}' as user '{DB_USER}'")
+        print(f"Details: {e}")
         sys.exit(1)
 
-def create_tables(conn):
+def initialize_schema():
+    drop_statements = [
+        "DROP TABLE IF EXISTS qualifying CASCADE",
+        "DROP TABLE IF EXISTS results CASCADE",
+        "DROP TABLE IF EXISTS races CASCADE",
+        "DROP TABLE IF EXISTS constructors CASCADE",
+        "DROP TABLE IF EXISTS drivers CASCADE",
+        "DROP TABLE IF EXISTS circuits CASCADE",
+    ]
 
-    cursor = conn.cursor()
-    logging.warning(f"Dropping tables in {DB_NAME} database if exists.")
+    create_statements = [
+        """
+        CREATE TABLE IF NOT EXISTS circuits (
+            circuitId TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            location TEXT,
+            country TEXT
+            )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS drivers (
+            driverId TEXT PRIMARY KEY,
+            code TEXT,
+            givenName TEXT,
+            familyName TEXT,
+            nationality TEXT
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS constructors (
+            constructorId TEXT PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            nationality TEXT
+        ) 
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS races (
+            year INTEGER NOT NULL,
+            round INTEGER NOT NULL,
+            circuitId TEXT NOT NULL,
+            name TEXT NOT NULL,
+            date TIMESTAMP NOT NULL,
+            PRIMARY KEY (year, round),
+            FOREIGN KEY (circuitId) REFERENCES circuits (circuitId)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS results (
+            resultId SERIAL PRIMARY KEY,
+            race_year INTEGER NOT NULL,
+            race_round INTEGER NOT NULL,
+            session_type TEXT NOT NULL,
+            driverId TEXT NOT NULL,
+            constructorId TEXT NOT NULL,
+            grid INTEGER NOT NULL,
+            position INTEGER,
+            points REAL NOT NULL,
+            status TEXT,
+            FOREIGN KEY (race_year, race_round) REFERENCES races (year, round),
+            FOREIGN KEY (driverId) REFERENCES drivers (driverId),
+            FOREIGN KEY (constructorId) REFERENCES constructors (constructorId),
+            UNIQUE (race_year, race_round, session_type, driverId)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS qualifying (
+            qualifyId SERIAL PRIMARY KEY,
+            race_year INTEGER NOT NULL,
+            race_round INTEGER NOT NULL,
+            session_type TEXT NOT NULL,
+            driverId TEXT NOT NULL,
+            constructorId TEXT NOT NULL,
+            position INTEGER NOT NULL,
+            q1 TEXT,
+            q2 TEXT,
+            q3 TEXT,
+            FOREIGN KEY (race_year, race_round) REFERENCES races (year, round),
+            FOREIGN KEY (driverId) REFERENCES drivers (driverId),
+            FOREIGN KEY (constructorId) REFERENCES constructors (constructorId),
+            UNIQUE (race_year, race_round, session_type, driverId)
+        )
+        """
+    ]
 
-    cursor.execute(f"DROP TABLE IF EXISTS weather CASCADE;")
-    cursor.execute(f"DROP TABLE IF EXISTS drivers CASCADE;")
-    cursor.execute(f"DROP TABLE IF EXISTS session_results CASCADE;")
-    cursor.execute(f"DROP TABLE IF EXISTS sessions CASCADE;")
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                print("Initializing schema")
+                print("Dropping old tables")
+                for statement in drop_statements:
+                    cur.execute(statement)
 
-    logging.warning(f"Creating tables in {DB_NAME} database.")
+                print("Creating tables")
+                for statement in create_statements:
+                    cur.execute(statement)
 
-    cursor.execute("""
-                    CREATE TABLE sessions (
-                    session_key INTEGER PRIMARY KEY,
-                    session_name TEXT,
-                    session_type TEXT,
-                    country_name TEXT,
-                    circuit_key INTEGER,
-                    circuit_short_name TEXT,
-                    date_start TIMESTAMP,
-                    year INTEGER
-                    )
-    """)
+                print(f"Database schema for '{DB_NAME}' created'")
 
-    cursor.execute("""
-                   CREATE TABLE session_results (
-                       id SERIAL PRIMARY KEY,
-                       session_key INTEGER REFERENCES sessions(session_key) ON DELETE CASCADE,
-                       driver_number INTEGER,
-                       position INTEGER,
-                       points INTEGER,
-                       dnf BOOLEAN,
-                       dns BOOLEAN,
-                       dsq BOOLEAN
-                   )
-                   """)
+    except (Exception, psycopg2.DatabaseError) as e:
+        print(f"Error during schema initialization: {e}")
+        print("Transaction rolled back")
 
-    cursor.execute("""
-                   CREATE TABLE drivers (
-                    driver_number INTEGER,
-                    session_key INTEGER REFERENCES sessions(session_key) ON DELETE CASCADE,
-                    meeting_key INTEGER,
-                    broadcast_name TEXT,
-                    full_name TEXT,
-                    team_name TEXT,
-                    team_colour TEXT,
-                    country_code TEXT,
-                    PRIMARY KEY (driver_number, session_key)
-                   )
-                   """)
-
-    cursor.execute("""
-                CREATE TABLE weather
-                (
-                    id SERIAL PRIMARY KEY,
-                    session_key INTEGER REFERENCES sessions(session_key) ON DELETE CASCADE,
-                    date TIMESTAMP,
-                    air_temperature REAL,
-                    track_temperature REAL,
-                    rainfall INTEGER,
-                    humidity REAL,
-                    pressure REAL,
-                    wind_speed REAL,
-                    wind_direction INTEGER
-                )
-                """)
-
-    conn.commit()
-    cursor.close()
-    logging.info(f"Created tables in {DB_NAME} database.")
-
-if __name__ == "__main__":
-    db_conn = get_connection()
-    if db_conn:
-        create_tables(db_conn)
-        db_conn.close()
-        logging.info(f"Connected to {DB_NAME} database on host {DB_HOST}.")
-
+if __name__ == '__main__':
+    initialize_schema()
