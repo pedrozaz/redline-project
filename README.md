@@ -102,3 +102,7 @@ The simulation (`simulate_championship.py`) is the most complex part of the syst
 - If a driver's "DNF Roll" was lower than their `dnf_rate`, their predicted points for that event are set to 0.
 
 6. **Calculate Winners:** The script reshapes the final points array, adds the driver's current points, and uses `np.argmax()` to find the winner of each of the 50,000 simulated seasons. The counts are then returned as percentages.
+
+
+
+USAGE EXAMPLE VIDEO: https://youtu.be/eLeIsGyF1dI
